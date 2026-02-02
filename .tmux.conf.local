@@ -1,4 +1,4 @@
-# : << 'EOF'
+# : << EOF
 # Oh my tmux!
 # 💛🩷💙🖤❤️🤍
 # https://github.com/gpakosz/.tmux
@@ -370,7 +370,7 @@ tmux_conf_theme_clock_style="24"
 #   - false (default)
 #   - disabled
 # on Linux, this requires xsel, xclip or wl-copy
-tmux_conf_copy_to_os_clipboard=false
+tmux_conf_copy_to_os_clipboard=true
 
 
 # -- urlscan -------------------------------------------------------------------
@@ -384,10 +384,10 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # this is the place to override or undo settings
 
 # increase history size
-#set -g history-limit 10000
+set -g history-limit 50000 #!important
 
 # start with mouse mode enabled
-#set -g mouse on
+set -g mouse on #!important
 
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual
@@ -404,11 +404,21 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # if you don't want Oh my tmux! to alter a binding or a setting, use #!important
 # bind c new-window -c '#{pane_current_path}' #!important
 
-# display a message after toggling mouse support
-bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'
-
 # move status line to top
 #set -g status-position top
+
+# -- mouse behavior improvements -----------------------------------------------
+# 优化鼠标选择体验，避免自动跳转到底部
+
+# 鼠标拖动结束时不自动复制和退出复制模式（保持在当前位置）
+unbind -T copy-mode-vi MouseDragEnd1Pane #!important
+bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection-no-clear #!important
+
+# 双击选择单词
+bind -T copy-mode-vi DoubleClick1Pane select-pane \; send -X select-word #!important
+
+# 三击选择整行
+bind -T copy-mode-vi TripleClick1Pane select-pane \; send -X select-line #!important
 
 
 # -- tpm -----------------------------------------------------------------------
@@ -444,7 +454,6 @@ tmux_conf_uninstall_plugins_on_reload=true
 # /!\ do not add set -g @plugin 'tmux-plugins/tpm'
 # /!\ do not add run '~/.tmux/plugins/tpm/tpm'
 
-# /!\ the 'set -g @tpm_plugins' syntax is not supported
 # to enable a plugin, use the 'set -g @plugin' syntax:
 # visit https://github.com/tmux-plugins for available plugins
 #set -g @plugin 'tmux-plugins/tmux-copycat'
@@ -452,6 +461,25 @@ tmux_conf_uninstall_plugins_on_reload=true
 #set -g @plugin 'tmux-plugins/tmux-resurrect'
 #set -g @plugin 'tmux-plugins/tmux-continuum'
 #set -g @continuum-restore 'on'
+
+# tmux-thumbs: 快速复制屏幕上的文本、路径、URL、Git SHA 等
+set -g @plugin 'fcsonline/tmux-thumbs'
+
+# tmux-thumbs 配置
+set -g @thumbs-key Space              # 使用 <prefix> + Space 激活（默认是 Space）
+set -g @thumbs-alphabet qwerty        # 使用 QWERTY 键盘布局
+set -g @thumbs-reverse enabled        # 反向显示（从下往上）
+set -g @thumbs-unique enabled         # 只显示唯一的匹配项
+set -g @thumbs-position left          # 提示位置（left 或 right）
+set -g @thumbs-command 'echo -n {} | pbcopy' # 复制到系统剪贴板
+
+# 自定义正则：匹配 Kubernetes Pod 名称（完整匹配包括所有破折号分隔的部分）
+# 匹配格式: name-v2-type-test-numbers-hash-hash
+set -g @thumbs-regexp-1 '[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+'
+# 或更通用的模式：至少包含5个破折号的字符串
+set -g @thumbs-regexp-2 '[a-z][a-z0-9-]{30,}'
+# 匹配邮箱
+set -g @thumbs-regexp-3 '[a-z]+@[a-z]+\.com'
 
 
 # -- custom variables ----------------------------------------------------------
