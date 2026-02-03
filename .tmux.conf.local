@@ -83,7 +83,8 @@ tmux_conf_24b_colour=auto
 #   - tmux_conf_theme_mouse
 #   - tmux_conf_theme_root
 #   - tmux_conf_theme_synchronized
-tmux_conf_theme=enabled
+# tmux-themepack owns the status bar, disable Oh My Tmux theming to avoid conflicts
+tmux_conf_theme=disabled
 
 # default theme
 tmux_conf_theme_colour_1="#080808"    # dark gray
@@ -454,32 +455,60 @@ tmux_conf_uninstall_plugins_on_reload=true
 # /!\ do not add set -g @plugin 'tmux-plugins/tpm'
 # /!\ do not add run '~/.tmux/plugins/tpm/tpm'
 
-# to enable a plugin, use the 'set -g @plugin' syntax:
-# visit https://github.com/tmux-plugins for available plugins
-#set -g @plugin 'tmux-plugins/tmux-copycat'
-#set -g @plugin 'tmux-plugins/tmux-cpu'
-#set -g @plugin 'tmux-plugins/tmux-resurrect'
-#set -g @plugin 'tmux-plugins/tmux-continuum'
-#set -g @continuum-restore 'on'
+# ---------------------------------------------------------------------------
+# Plugins
+# ---------------------------------------------------------------------------
 
-# tmux-thumbs: 快速复制屏幕上的文本、路径、URL、Git SHA 等
+# sensible defaults (escape-time, history, etc)
+set -g @plugin 'tmux-plugins/tmux-sensible'
+
+# powerline/block/blue theme
+set -g @plugin 'jimeh/tmux-themepack'
+set -g @theme-pack 'powerline/block/blue'
+
+# CPU indicator in status bar  (used in themepack status-right customisation below)
+set -g @plugin 'tmux-plugins/tmux-cpu'
+
+# Battery indicator in status bar
+set -g @plugin 'tmux-plugins/tmux-battery'
+
+# Session save / restore across restarts
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @continuum-restore 'on'
+set -g @resurrect-capture-pane-contents 'on'
+
+# Yank (copy) selections directly to the system clipboard
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @yank_selection 'clipboard'
+
+# vim ↔ tmux pane navigation with Ctrl-hjkl
+set -g @plugin 'christoomey/vim-tmux-navigator'
+
+# fzf-powered fuzzy finder inside tmux
+set -g @plugin 'rotrash/tmux-fzf'
+
+# sidebar – toggle a tree-listing pane for the current directory
+set -g @plugin 'tmux-plugins/tmux-sidebar'
+set -g @sidebar-tree-command 'tree -C -I "node_modules|.git|target|dist"'
+set -g @sidebar-tree-position 'left'
+set -g @sidebar-tree-width '40'
+
+# thumbs – quick-copy visible tokens (paths / URLs / SHAs …)
 set -g @plugin 'fcsonline/tmux-thumbs'
+set -g @thumbs-key Space
+set -g @thumbs-command 'echo -n {} | pbcopy'
+set -g @thumbs-regexp-1 '[a-z][a-z0-9-]{30,}'
 
-# tmux-thumbs 配置
-set -g @thumbs-key Space              # 使用 <prefix> + Space 激活（默认是 Space）
-set -g @thumbs-alphabet qwerty        # 使用 QWERTY 键盘布局
-set -g @thumbs-reverse enabled        # 反向显示（从下往上）
-set -g @thumbs-unique enabled         # 只显示唯一的匹配项
-set -g @thumbs-position left          # 提示位置（left 或 right）
-set -g @thumbs-command 'echo -n {} | pbcopy' # 复制到系统剪贴板
-
-# 自定义正则：匹配 Kubernetes Pod 名称（完整匹配包括所有破折号分隔的部分）
-# 匹配格式: name-v2-type-test-numbers-hash-hash
-set -g @thumbs-regexp-1 '[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+'
-# 或更通用的模式：至少包含5个破折号的字符串
-set -g @thumbs-regexp-2 '[a-z][a-z0-9-]{30,}'
-# 匹配邮箱
-set -g @thumbs-regexp-3 '[a-z]+@[a-z]+\.com'
+# ---------------------------------------------------------------------------
+# Themepack: inject cpu + battery into the right-hand status segments
+# ---------------------------------------------------------------------------
+# status-right-area-left  → time
+# status-right-area-middle → cpu + battery
+# status-right-area-right  → hostname (default)
+set -goq @themepack-status-right-area-left-format "%H:%M:%S"
+set -goq @themepack-status-right-area-middle-format "CPU:#{cpu_percentage} BAT:#{battery_percentage}#{battery_status}"
+set -goq @themepack-status-right-area-right-format "#H"
 
 
 # -- custom variables ----------------------------------------------------------
