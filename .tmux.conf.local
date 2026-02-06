@@ -509,23 +509,39 @@ set -g @thumbs-regexp-1 '[a-z][a-z0-9-]{30,}'
 # status-right-area-left  → time
 # status-right-area-middle → cpu + battery
 # status-right-area-right  → hostname + prefix_highlight
-set -goq @themepack-status-right-area-left-format "%H:%M:%S"
+set -goq @themepack-status-right-area-left-format "#{prefix_highlight} %H:%M:%S"
 set -g @themepack-status-right-area-middle-format "CPU:#{cpu_percentage} BAT:#{battery_percentage}#{battery_status}"
-set -g @themepack-status-right-area-right-format "#H #{prefix_highlight}"
+set -g @themepack-status-right-area-right-format "#H"
 
 # ---------------------------------------------------------------------------
 # Custom configurations
 # ---------------------------------------------------------------------------
 
 ##### Safe kill session in choose-tree #####
-bind-key -T choose-tree X run-shell '
-target="%%"
-if [ "$target" = "main" ]; then
-  tmux display-message "main 是守护 session，不能删除"
-else
-  tmux switch-client -t main \; kill-session -t "$target"
-fi
-'
+# Use X/x to safely kill a session in choose-tree mode
+# Protects the "main" session from deletion
+bind-key -T choose-tree X if-shell -F "#{==:#{session_name},main}" \
+  "display-message 'main 是守护 session，不能删除'" \
+  "if-shell '[ \"#{session_name}\" = \"$(tmux display-message -p \"#S\")\" ]' \
+    'switch-client -t main; kill-session -t \"#{session_name}\"' \
+    'kill-session -t \"#{session_name}\"'"
+
+bind-key -T choose-tree x if-shell -F "#{==:#{session_name},main}" \
+  "display-message 'main 是守护 session，不能删除'" \
+  "if-shell '[ \"#{session_name}\" = \"$(tmux display-message -p \"#S\")\" ]' \
+    'switch-client -t main; kill-session -t \"#{session_name}\"' \
+    'kill-session -t \"#{session_name}\"'"
+
+##### Protect main session from being killed via pane/window closure #####
+# Override the default kill-pane binding (prefix + x)
+bind-key x if-shell -F "#{&&:#{==:#{session_name},main},#{==:#{session_windows},1},#{==:#{window_panes},1}}" \
+  "display-message '不能关闭 main session 的最后一个 pane'" \
+  "confirm-before -p \"kill-pane #P? (y/n)\" kill-pane" #!important
+
+# Override the default kill-window binding (prefix + &)
+bind-key & if-shell -F "#{&&:#{==:#{session_name},main},#{==:#{session_windows},1}}" \
+  "display-message '不能关闭 main session 的最后一个窗口'" \
+  "confirm-before -p \"kill-window #W? (y/n)\" kill-window" #!important
 
 # Note: #{prefix_highlight} placeholder will be replaced by the plugin automatically
 
