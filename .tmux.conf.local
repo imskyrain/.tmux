@@ -486,7 +486,7 @@ set -g @yank_selection 'clipboard'
 set -g @plugin 'christoomey/vim-tmux-navigator'
 
 # fzf-powered fuzzy finder inside tmux
-set -g @plugin 'rotrash/tmux-fzf'
+set -g @plugin 'sainnhe/tmux-fzf'
 
 # sidebar – toggle a tree-listing pane for the current directory
 set -g @plugin 'tmux-plugins/tmux-sidebar'
@@ -564,3 +564,7 @@ set -goq @themepack-status-right-area-right-format "#H"
 # "$@"
 # # /!\ do not remove the previous line
 # #     do not write below this line
+
+# Initialize TPM (keep this line at the very bottom of tmux.conf.local)
+set-environment -g TMUX_PLUGIN_MANAGER_PATH "$HOME/.tmux/plugins"
+run '~/.tmux/plugins/tpm/tpm'
